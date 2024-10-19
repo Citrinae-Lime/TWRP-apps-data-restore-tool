@@ -64,15 +64,15 @@ function Restore-Package {
     )
     Write-Host "========================================================="
 
-    AdbShell pm path $package
+    AdbShell "pm path $package"
     $exists = $LASTEXITCODE
 
     # Userinstalled Apps
     if ($exists -eq 0) {
         Write-Host "Killing $package"
-        AdbShell am force-stop $package
+        AdbShell "am force-stop $package"
         Write-Host "Clearing $package"
-        AdbShell pm clear $package
+        AdbShell "pm clear $package"
     }
 
     Write-Host "Reinstalling apk of $package"
@@ -84,27 +84,34 @@ function Restore-Package {
 
     # Preinstalled Apps
     # if ($exists -ne 0) {
-    #     Write-Host "Failed to find preinstalled $apk" -ForegroundColor DarkYellow
+    #     Write-Host "Failed to find preinstalled $package" -ForegroundColor DarkYellow
     #     return
     # }
     # Write-Host "Killing $package"
-    # AdbShell am force-stop $package
+    # AdbShell "am force-stop $package"
     # Write-Host "Clearing $package"
-    # AdbShell pm clear $package
+    # AdbShell "pm clear $package"
     
-    # Remove cache to save tame
-    Remove-Item -Path "$LocalPackages$package\cache" -Recurse
+    # Remove cache and compress to save tame
+    # Remove-Item -Path "$LocalPackages$package\cache" -Recurse
     Remove-Item -Path "$LocalPackages$package\code_cache" -Recurse
+    tar.exe -czf "$package.tgz" --exclude "cache" -C $LocalPackages $package
 
     Write-Host "Restoring $package"
-    .\adb.exe push "$LocalPackages$package" "$TempPackages$package"
-    AdbShell cp -r "$TempPackages$package" "$RemotePackages"
+    .\adb.exe push "$package.tgz" "$TempPackages/$package.tgz"
+    # $userid=AdbShell "stat -c '%U' $RemotePackages$package"
+    # $groupid=AdbShell "stat -c '%G' $RemotePackages$package"
+    AdbShell "tar xfz $TempPackages$package.tgz -C $RemotePackages && rm $TempPackages$package.tgz"
+    # AdbShell cp -r "$TempPackages$package" "$RemotePackages"
+
     Write-Host "Correcting package"
-    $userid = AdbShell dumpsys package $package | Select-String "userId" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
+    $userid = AdbShell "dumpsys package $package" | Select-String "userId" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
     AdbShell chown -R "$userid`:$userid" "$RemotePackages$package"
-    AdbShell restorecon -Rv "$RemotePackages$package"
+    # AdbShell "chown -R $userid`:$groupid $RemotePackages$package"
+    AdbShell "restorecon -Rv $RemotePackages$package"
+    
     Write-Host "Package restored on device." -ForegroundColor Green
-    AdbShell rm -rf "$TempPackages$package"
+    # AdbShell rm -rf "$TempPackages$package"
 }
 
 ForEach($package in $pkgList) {
