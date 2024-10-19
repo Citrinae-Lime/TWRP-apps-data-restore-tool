@@ -11,11 +11,13 @@ This tool allows you to recover apps data from a TWRP-compatible backup
 
 ## Computer requirements
 
-- Windows
+- Windows with Windows Terminal
 - Powershell
-- adb
+- (ADB)[https://developer.android.com/tools/releases/platform-tools]
 
 ## Usage
+
+You can use the `Get-Help` command to get the usage of the script.
 
 1. `.\0_Extract.qs1 E:\Path\to\TWRP\BACKUPS\files`
 2. `$(Get-ChildItem E:\Path\to\TWRP\BACKUPS\*\data\data).BaseName | Out-File -FilePath Packages.txt`

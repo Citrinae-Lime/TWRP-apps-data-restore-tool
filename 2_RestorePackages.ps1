@@ -16,19 +16,18 @@
   Path to local data\app folder
 
   .EXAMPLE
-  a
+  .\2_RestorePackages.ps1 $(Get-Content Packages.txt) -lpkg E:\Path\to\TWRP\BACKUPS\*\data\data\ -lapk E:\Path\to\TWRP\BACKUPS\*\data\app\
 
   .EXAMPLE
-  a
+  .\2_RestorePackages.ps1 "com.test.app","com.other.app"
 #>
 
 [CmdletBinding()]
 Param (
     [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][object]$pkgList,
-    # TWRP extract location for data/data/
-    # Change if necessary!
-    [Parameter(Mandatory=$False)][ValidateNotNullOrEmpty()][Alias("lpkg")][String]$LocalPackages = "$env:USERPROFILE\data\data\",
-    [Parameter(Mandatory=$False)][ValidateNotNullOrEmpty()][Alias("lapk")][String]$LocalApkPath = "$env:USERPROFILE\data\app\"
+    # TWRP extract location, change if necessary!
+    [Parameter(Mandatory=$False)][ValidateNotNullOrEmpty()][Alias("lpkg")][String]$LocalPackages = ".\data\data\",
+    [Parameter(Mandatory=$False)][ValidateNotNullOrEmpty()][Alias("lapk")][String]$LocalApkPath = ".\data\app\"
 )
 
 # Android delivery destination
@@ -109,7 +108,7 @@ function Restore-Package {
     AdbShell chown -R "$userid`:$userid" "$RemotePackages$package"
     # AdbShell "chown -R $userid`:$groupid $RemotePackages$package"
     AdbShell "restorecon -Rv $RemotePackages$package"
-    
+
     Write-Host "Package restored on device." -ForegroundColor Green
     # AdbShell rm -rf "$TempPackages$package"
 }
